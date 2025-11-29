@@ -89,7 +89,7 @@ jobs:
 
     - name: Update image tag in manifests
       run: |
-        sed -i 's|vercetti06/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' kubernetes/deployment.yml
+        sed -i 's|vercetti06/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' Kubernetes/deployment.yml
 
     - name: Start fresh Minikube
       uses: medyagh/setup-minikube@latest 
