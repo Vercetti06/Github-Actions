@@ -86,33 +86,42 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Create kind cluster
-      uses: helm/kind-action@v1.10.0
-      with:
-        version: v0.24.0
-        cluster_name: java-app-ci
-        config: |
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          networking:
-            apiServerAddress: "127.0.0.1"
-          nodes:
-          - role: control-plane
-            extraPortMappings:
-            - containerPort: 80
-              hostPort: 80
-              protocol: TCP
-            - containerPort: 8080
-              hostPort: 8080
-              protocol: TCP
+    - name: Create kind config file
+      run: |
+        cat > kind-config.yaml << 'EOF'
+        kind: Cluster
+        apiVersion: kind.x-k8s.io/v1alpha4
+        networking:
+          apiServerAddress: "127.0.0.1"
+        nodes:
+        - role: control-plane
+          extraPortMappings:
+          - containerPort: 80
+            hostPort: 80
+            protocol: TCP
+          - containerPort: 8080
+            hostPort: 8080
+            protocol: TCP
+        EOF
+
+    - name: Install kind
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.24.0/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/
 
     - name: Install kubectl
       uses: azure/setup-kubectl@v4
       with:
         version: 'v1.32.0'
 
+    - name: Create kind cluster
+      run: |
+        kind create cluster --config kind-config.yaml --name java-app-ci
+
     - name: Load Docker Image to KIND
       run: |
+        docker pull vercetti06/java-app:${{ github.sha }}
         kind load docker-image vercetti06/java-app:${{ github.sha }} --name java-app-ci
 
     - name: Update image tag in manifests
@@ -136,4 +145,3 @@ jobs:
     - name: Cleanup KIND Cluster
       if: always()
       run: kind delete cluster --name java-app-ci
-
