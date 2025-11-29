@@ -39,8 +39,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         args: >
-          -Dsonar.organization=your-org
-          -Dsonar.projectKey=your-project-key
+          -Dsonar.organization=vercetti06
+          -Dsonar.projectKey=Vercetti06:git-scanner
           -Dsonar.host.url=https://sonarcloud.io
 
   docker-build-push:
