@@ -6,7 +6,7 @@ on:
 
 env:
   KUBECONFIG: ${{ secrets.KUBECONFIG }}
-  SONAR_TOKEN: ${{ secrets.SONAR_TKN }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
