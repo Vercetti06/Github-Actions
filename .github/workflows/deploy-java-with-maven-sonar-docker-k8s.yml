@@ -6,7 +6,6 @@ on:
     branches: [ main ]
 
 env:
-  KUBECONFIG: ${{ secrets.KUBECONFIG }}
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -87,61 +86,54 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Install KIND
-      run: |
-        GO111MODULE=on go install sigs.k8s.io/kind@v0.24.0
-        echo "$HOME/go/bin" >> $GITHUB_PATH
+    - name: Create kind cluster
+      uses: helm/kind-action@v1.10.0
+      with:
+        version: v0.24.0
+        cluster: java-app-ci
+        config: |
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          networking:
+            apiServerAddress: "127.0.0.1"
+          nodes:
+          - role: control-plane
+            extraPortMappings:
+            - containerPort: 80
+              hostPort: 80
+              protocol: TCP
+            - containerPort: 8080
+              hostPort: 8080
+              protocol: TCP
 
     - name: Install kubectl
       uses: azure/setup-kubectl@v4
       with:
         version: 'v1.32.0'
 
-    - name: Update image tag in manifests
-      run: |
-        sed -i 's|vercetti06/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' Kubernetes/deployment.yml
-
-    - name: Create KIND Cluster
-      run: |
-        cat <<EOF > kind-config.yaml
-        kind: Cluster
-        apiVersion: kind.x-k8s.io/v1alpha4
-        nodes:
-        - role: control-plane
-          kubeadmConfigPatches:
-          - |
-            kind: InitConfiguration
-            nodeRegistration:
-              kubeletExtraArgs:
-                node-labels: "ingress-ready=true"
-        EOF
-        kind create cluster --config kind-config.yaml --name java-app-ci
-
     - name: Load Docker Image to KIND
       run: |
-        docker pull vercetti06/java-app:${{ github.sha }}
         kind load docker-image vercetti06/java-app:${{ github.sha }} --name java-app-ci
 
+    - name: Update image tag in manifests
+      run: |
+        sed -i 's|yourusername/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' Kubernetes/deployment.yml
+
     - name: Deploy manifests
-      run: kubectl apply -f kubernetes/ --context=kind-java-app-ci
+      run: kubectl apply -f Kubernetes/ --context=kind-java-app-ci
 
     - name: Wait for readiness
       run: |
-        kubectl wait --for=condition=Ready pod --all --timeout=120s --context=kind-java-app-ci
+        kubectl wait --for=condition=Ready pod --all --timeout=180s --context=kind-java-app-ci
         kubectl get all --context=kind-java-app-ci
 
-    - name: Test Service Access (Port Forward)
+    - name: Test Service Access
       run: |
         kubectl port-forward --address 0.0.0.0 service/java-app-service 8080:80 --context=kind-java-app-ci &
-        sleep 5
-        curl -f http://localhost:8080 || echo "Health check failed"
+        sleep 10
+        curl -f http://localhost:8080/actuator/health || curl -f http://localhost:8080 || echo "Health check failed"
 
     - name: Cleanup KIND Cluster
       if: always()
       run: kind delete cluster --name java-app-ci
-
-    
 
