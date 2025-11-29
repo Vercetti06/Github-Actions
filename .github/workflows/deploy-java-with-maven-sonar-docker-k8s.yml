@@ -102,7 +102,7 @@ jobs:
 
     - name: Update image tag in manifests
       run: |
-        sed -i 's|vercetti06/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' Kubernetes/deployment.yaml
+        sed -i 's|vercetti06/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' Kubernetes/deployment.yml
 
     - name: Create KIND Cluster
       run: |
