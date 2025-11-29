@@ -89,12 +89,24 @@ jobs:
 
     - name: Update image tag in manifests
       run: |
-        sed -i 's|vercetti06/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' kubernetes/deployment.yaml
+        sed -i 's|vercetti06/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' kubernetes/deployment.yml
 
-    - name: Deploy to Kubernetes
-      uses: stefanzweifel/kubectl-apply@v1
-      with:
-        args: --recursive -f kubernetes/
-      env:
-        KUBECONFIG: ${{ env.KUBECONFIG }}
+    - name: Start fresh Minikube
+      uses: medyagh/setup-minikube@latest 
+
+    - name: Verify cluster
+      run: |
+        kubectl get nodes
+        kubectl cluster-info
+
+    - name: Deploy manifests
+      run: kubectl apply -f Kubernetes/ 
+
+    - name: Wait for readiness
+      run: |
+        kubectl wait --for=condition=Ready pod --all --timeout=120s
+        kubectl get all
+
+    - name: Get service URL
+      run: minikube service service.yml --url 
 
