@@ -129,7 +129,7 @@ jobs:
       run: |
         SHORT_SHA=${{ github.sha }}
         echo "Using commit SHA: $SHORT_SHA"
-        sed -i "s|vercetti06/java-app:latest|vercetti06/java-app:${SHORT_SHA}|g" Kubernetes/deployment.yml
+        sed -i "s/ReplaceImageTag/${SHORT_SHA}/g" Kubernetes/deployment.yml
         cat Kubernetes/deployment.yml 
       shell: bash
 
