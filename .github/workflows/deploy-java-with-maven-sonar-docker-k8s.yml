@@ -124,9 +124,14 @@ jobs:
         docker pull vercetti06/java-app:${{ github.sha }}
         kind load docker-image vercetti06/java-app:${{ github.sha }} --name java-app-ci
 
-    - name: Update image tag in manifests
+    - name: Update deployment image tag in manifest
       run: |
-        sed -i 's|yourusername/java-app:latest|vercetti06/java-app:${{ github.sha }}|g' Kubernetes/deployment.yml
+        SHORT_SHA=${{ github.sha }}
+        echo "Using commit SHA: $SHORT_SHA"
+        sed -i "s|yourusername/java-app:latest|vercetti06/java-app:${SHORT_SHA}|g" Kubernetes/deployment.yml
+        cat Kubernetes/deployment.yml 
+      shell: bash
+
 
     - name: Deploy manifests
       run: kubectl apply -f Kubernetes/ --context=kind-java-app-ci
