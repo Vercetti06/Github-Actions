@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: java-app
-        image: vercetti06/java-app:latest  # Auto-updated by workflow
+        image: vercetti06/java-app:ReplaceImageTag  # Auto-updated by workflow
         ports:
         - containerPort: 8080
         resources:
