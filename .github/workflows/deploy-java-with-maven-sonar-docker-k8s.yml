@@ -1,9 +1,9 @@
 
 name: End to End CI/CD for Java App (Maven + Sonar + Docker + K8s)
 
-on:
-  push:
-    branches: [ main ]
+#on:
+  #push:
+    #branches: [ main ]
 
 env:
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
